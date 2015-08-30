@@ -212,24 +212,8 @@ func Create(url, migrationsPath, name string) (*file.MigrationFile, error) {
 	if err != nil {
 		return nil, err
 	}
-	files, err := file.ReadMigrationFiles(migrationsPath, file.FilenameRegex(d.FilenameExtension()))
-	if err != nil {
-		return nil, err
-	}
 
-	version := uint64(0)
-	if len(files) > 0 {
-		lastFile := files[len(files)-1]
-		version = lastFile.Version
-	}
-	version += 1
-	versionStr := strconv.FormatUint(version, 10)
-
-	length := 4 // TODO(mattes) check existing files and try to guess length
-	if len(versionStr)%length != 0 {
-		versionStr = strings.Repeat("0", length-len(versionStr)%length) + versionStr
-	}
-
+	versionStr := time.Now().Format("20060102150405")
 	filenamef := "%s_%s.%s.%s"
 	name = strings.Replace(name, " ", "_", -1)
 
