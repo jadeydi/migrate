@@ -183,11 +183,11 @@ func TestFiles(t *testing.T) {
 	**/
 
 	// test ToFirstFrom
-	tffFiles, err := files.ToFirstFrom([]uint64{101})
+	tffFiles, err := files.ToFirstFrom([]uint64{101, 401})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(tffFiles) != 1 {
+	if len(tffFiles) != 2 {
 		t.Fatalf("Wrong number of files returned by ToFirstFrom(), expected %v, got %v.", 1, len(tffFiles))
 	}
 	if tffFiles[0].Direction != direction.Down {

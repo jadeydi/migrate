@@ -78,6 +78,7 @@ func (f *File) ReadContent() error {
 // ToFirstFrom fetches all (down) migration files including the migration file
 // of the current version to the very first migration file.
 func (mf *MigrationFiles) ToFirstFrom(version []uint64) (Files, error) {
+	sort.Sort(sort.Reverse(mf))
 	files := make(Files, 0)
 	for _, migrationFile := range *mf {
 		var has bool = false
