@@ -205,7 +205,7 @@ func MigrateSync(url, migrationsPath string, relativeN int) (err []error, ok boo
 func Version(url, migrationsPath string) (version []uint64, err error) {
 	d, err := driver.New(url)
 	if err != nil {
-		return 0, err
+		return []uint64{}, err
 	}
 	return d.Version()
 }
@@ -255,7 +255,7 @@ func Create(url, migrationsPath, name string) (*file.MigrationFile, error) {
 func initDriverAndReadMigrationFilesAndGetVersion(url, migrationsPath string) (driver.Driver, *file.MigrationFiles, []uint64, error) {
 	d, err := driver.New(url)
 	if err != nil {
-		return nil, nil, 0, err
+		return nil, nil, []uint64{}, err
 	}
 	// FilenameExtension 返回 "sh" string
 	// file.FilenameRegex(d.FilenameExtension()) 是 Regex 的指针
@@ -263,12 +263,12 @@ func initDriverAndReadMigrationFilesAndGetVersion(url, migrationsPath string) (d
 	files, err := file.ReadMigrationFiles(migrationsPath, file.FilenameRegex(d.FilenameExtension()))
 	if err != nil {
 		d.Close() // TODO what happens with errors from this func?
-		return nil, nil, 0, err
+		return nil, nil, []uint64{}, err
 	}
 	version, err := d.Version()
 	if err != nil {
 		d.Close() // TODO what happens with errors from this func?
-		return nil, nil, 0, err
+		return nil, nil, []uint64{}, err
 	}
 	return d, &files, version, nil
 }

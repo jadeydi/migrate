@@ -69,32 +69,6 @@ func main() {
 			os.Exit(1)
 		}
 
-	case "goto":
-		verifyMigrationsPath(*migrationsPath)
-		toVersion := flag.Arg(1)
-		toVersionInt, err := strconv.Atoi(toVersion)
-		if err != nil || toVersionInt < 0 {
-			fmt.Println("Unable to parse param <v>.")
-			os.Exit(1)
-		}
-
-		currentVersion, err := migrate.Version(*url, *migrationsPath)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-
-		relativeNInt := toVersionInt - int(currentVersion)
-
-		timerStart = time.Now()
-		pipe := pipep.New()
-		go migrate.Migrate(pipe, *url, *migrationsPath, relativeNInt)
-		ok := writePipe(pipe)
-		printTimer()
-		if !ok {
-			os.Exit(1)
-		}
-
 	case "up":
 		verifyMigrationsPath(*migrationsPath)
 		timerStart = time.Now()

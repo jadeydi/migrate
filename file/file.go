@@ -145,11 +145,16 @@ func (mf *MigrationFiles) From(version []uint64, relativeN int) (Files, error) {
 
 	for _, migrationFile := range *mf {
 		if counter > 0 {
-
-			if d == direction.Up && migrationFile.Version > version && migrationFile.UpFile != nil {
+			var has bool = false
+			for _, v := range version {
+				if migrationFile.Version == v {
+					has = true
+				}
+			}
+			if !has && d == direction.Up && migrationFile.UpFile != nil {
 				files = append(files, *migrationFile.UpFile)
 				counter -= 1
-			} else if d == direction.Down && migrationFile.Version <= version && migrationFile.DownFile != nil {
+			} else if has && d == direction.Down && migrationFile.DownFile != nil {
 				files = append(files, *migrationFile.DownFile)
 				counter -= 1
 			}
