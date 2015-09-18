@@ -10,21 +10,24 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"time"
 
-	"github.com/mattes/migrate/driver"
-	"github.com/mattes/migrate/file"
-	"github.com/mattes/migrate/migrate/direction"
-	pipep "github.com/mattes/migrate/pipe"
+	"github.com/jadeydi/migrate/driver"
+	"github.com/jadeydi/migrate/file"
+	"github.com/jadeydi/migrate/migrate/direction"
+	pipep "github.com/jadeydi/migrate/pipe"
 )
 
 // Up applies all available migrations
 func Up(pipe chan interface{}, url, migrationsPath string) {
+	// 初始的version是0
 	d, files, version, err := initDriverAndReadMigrationFilesAndGetVersion(url, migrationsPath)
 	if err != nil {
 		go pipep.Close(pipe, err)
 		return
 	}
 
+	// TODO:// 这个实现不适合应该是从数据库里所有的都匹配
 	applyMigrationFiles, err := files.ToLastFrom(version)
 	if err != nil {
 		if err2 := d.Close(); err2 != nil {
@@ -48,6 +51,7 @@ func Up(pipe chan interface{}, url, migrationsPath string) {
 		go pipep.Close(pipe, nil)
 		return
 	} else {
+
 		if err := d.Close(); err != nil {
 			pipe <- err
 		}
@@ -198,7 +202,7 @@ func MigrateSync(url, migrationsPath string, relativeN int) (err []error, ok boo
 }
 
 // Version returns the current migration version
-func Version(url, migrationsPath string) (version uint64, err error) {
+func Version(url, migrationsPath string) (version []uint64, err error) {
 	d, err := driver.New(url)
 	if err != nil {
 		return 0, err
@@ -214,6 +218,7 @@ func Create(url, migrationsPath, name string) (*file.MigrationFile, error) {
 	}
 
 	versionStr := time.Now().Format("20060102150405")
+	version, _ := strconv.ParseUint(versionStr, 10, 64)
 	filenamef := "%s_%s.%s.%s"
 	name = strings.Replace(name, " ", "_", -1)
 
@@ -247,11 +252,14 @@ func Create(url, migrationsPath, name string) (*file.MigrationFile, error) {
 
 // initDriverAndReadMigrationFilesAndGetVersion is a small helper
 // function that is common to most of the migration funcs
-func initDriverAndReadMigrationFilesAndGetVersion(url, migrationsPath string) (driver.Driver, *file.MigrationFiles, uint64, error) {
+func initDriverAndReadMigrationFilesAndGetVersion(url, migrationsPath string) (driver.Driver, *file.MigrationFiles, []uint64, error) {
 	d, err := driver.New(url)
 	if err != nil {
 		return nil, nil, 0, err
 	}
+	// FilenameExtension 返回 "sh" string
+	// file.FilenameRegex(d.FilenameExtension()) 是 Regex 的指针
+	// 返回的就是所有的 files 数组
 	files, err := file.ReadMigrationFiles(migrationsPath, file.FilenameRegex(d.FilenameExtension()))
 	if err != nil {
 		d.Close() // TODO what happens with errors from this func?

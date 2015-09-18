@@ -1,7 +1,7 @@
 package file
 
 import (
-	"github.com/mattes/migrate/migrate/direction"
+	"github.com/jadeydi/migrate/migrate/direction"
 	"io/ioutil"
 	"os"
 	"path"
@@ -17,9 +17,9 @@ func TestParseFilenameSchema(t *testing.T) {
 		expectDirection   direction.Direction
 		expectErr         bool
 	}{
-		{"001_test_file.up.sql", "sql", 1, "test_file", direction.Up, false},
-		{"001_test_file.down.sql", "sql", 1, "test_file", direction.Down, false},
-		{"10034_test_file.down.sql", "sql", 10034, "test_file", direction.Down, false},
+		{"20150907140703_test_file.up.sql", "sql", 20150907140703, "test_file", direction.Up, false},
+		{"20150907140703_test_file.down.sql", "sql", 20150907140703, "test_file", direction.Down, false},
+		{"20150907150703_test_file.down.sql", "sql", 20150907150703, "test_file", direction.Down, false},
 		{"-1_test_file.down.sql", "sql", 0, "", direction.Up, true},
 		{"test_file.down.sql", "sql", 0, "", direction.Up, true},
 		{"100_test_file.down", "sql", 0, "", direction.Up, true},
@@ -74,7 +74,9 @@ func TestFiles(t *testing.T) {
 	ioutil.WriteFile(path.Join(tmpdir, "101_drop_tables.down.sql"), nil, 0755)
 
 	ioutil.WriteFile(path.Join(tmpdir, "301_migrationfile.up.sql"), nil, 0755)
+	ioutil.WriteFile(path.Join(tmpdir, "301_migrationfile.down.sql"), nil, 0755)
 
+	ioutil.WriteFile(path.Join(tmpdir, "401_migrationfile.up.sql"), []byte("test"), 0755)
 	ioutil.WriteFile(path.Join(tmpdir, "401_migrationfile.down.sql"), []byte("test"), 0755)
 
 	files, err := ReadMigrationFiles(tmpdir, FilenameRegex("sql"))
@@ -121,13 +123,7 @@ func TestFiles(t *testing.T) {
 	if files[3].UpFile == nil {
 		t.Fatalf("Missing up file for version %v", files[3].Version)
 	}
-	if files[3].DownFile != nil {
-		t.Fatalf("There should not be a down file for version %v", files[3].Version)
-	}
 
-	if files[4].UpFile != nil {
-		t.Fatalf("There should not be a up file for version %v", files[4].Version)
-	}
 	if files[4].DownFile == nil {
 		t.Fatalf("Missing down file for version %v", files[4].Version)
 	}
@@ -151,6 +147,7 @@ func TestFiles(t *testing.T) {
 		t.Error("file name is not correct", files[0].UpFile.FileName)
 	}
 
+	/**
 	// test file.From()
 	// there should be the following versions:
 	// 1(up&down), 2(up&down), 101(up&down), 301(up), 401(down)
@@ -183,26 +180,27 @@ func TestFiles(t *testing.T) {
 			}
 		}
 	}
+	**/
 
 	// test ToFirstFrom
-	tffFiles, err := files.ToFirstFrom(401)
+	tffFiles, err := files.ToFirstFrom([]uint64{101})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(tffFiles) != 4 {
-		t.Fatalf("Wrong number of files returned by ToFirstFrom(), expected %v, got %v.", 5, len(tffFiles))
+	if len(tffFiles) != 1 {
+		t.Fatalf("Wrong number of files returned by ToFirstFrom(), expected %v, got %v.", 1, len(tffFiles))
 	}
 	if tffFiles[0].Direction != direction.Down {
 		t.Error("ToFirstFrom() did not return DownFiles")
 	}
 
 	// test ToLastFrom
-	tofFiles, err := files.ToLastFrom(0)
+	tofFiles, err := files.ToLastFrom([]uint64{101, 401})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(tofFiles) != 4 {
-		t.Fatalf("Wrong number of files returned by ToLastFrom(), expected %v, got %v.", 5, len(tofFiles))
+	if len(tofFiles) != 3 {
+		t.Fatalf("Wrong number of files returned by ToLastFrom(), expected %v, got %v.", 3, len(tofFiles))
 	}
 	if tofFiles[0].Direction != direction.Up {
 		t.Error("ToFirstFrom() did not return UpFiles")

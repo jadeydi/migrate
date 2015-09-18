@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/mattes/migrate/migrate/direction"
+	"github.com/jadeydi/migrate/migrate/direction"
 	"go/token"
 	"io/ioutil"
 	"path"
@@ -77,11 +77,16 @@ func (f *File) ReadContent() error {
 
 // ToFirstFrom fetches all (down) migration files including the migration file
 // of the current version to the very first migration file.
-func (mf *MigrationFiles) ToFirstFrom(version uint64) (Files, error) {
-	sort.Sort(sort.Reverse(mf))
+func (mf *MigrationFiles) ToFirstFrom(version []uint64) (Files, error) {
 	files := make(Files, 0)
 	for _, migrationFile := range *mf {
-		if migrationFile.Version <= version && migrationFile.DownFile != nil {
+		var has bool = false
+		for _, v := range version {
+			if migrationFile.Version == v {
+				has = true
+			}
+		}
+		if has {
 			files = append(files, *migrationFile.DownFile)
 		}
 	}
@@ -90,11 +95,17 @@ func (mf *MigrationFiles) ToFirstFrom(version uint64) (Files, error) {
 
 // ToLastFrom fetches all (up) migration files to the most recent migration file.
 // The migration file of the current version is not included.
-func (mf *MigrationFiles) ToLastFrom(version uint64) (Files, error) {
-	sort.Sort(mf)
+func (mf *MigrationFiles) ToLastFrom(version []uint64) (Files, error) {
+
 	files := make(Files, 0)
 	for _, migrationFile := range *mf {
-		if migrationFile.Version > version && migrationFile.UpFile != nil {
+		var has bool = false
+		for _, v := range version {
+			if migrationFile.Version == v {
+				has = true
+			}
+		}
+		if !has {
 			files = append(files, *migrationFile.UpFile)
 		}
 	}
@@ -109,7 +120,7 @@ func (mf *MigrationFiles) ToLastFrom(version uint64) (Files, error) {
 // 		-1 will fetch the the previous down migration file
 // 		-2 will fetch the next two previous down migration files
 //		-n will fetch ...
-func (mf *MigrationFiles) From(version uint64, relativeN int) (Files, error) {
+func (mf *MigrationFiles) From(version []uint64, relativeN int) (Files, error) {
 	var d direction.Direction
 	if relativeN > 0 {
 		d = direction.Up
@@ -156,6 +167,7 @@ func ReadMigrationFiles(path string, filenameRegex *regexp.Regexp) (files Migrat
 	if err != nil {
 		return nil, err
 	}
+	// direction.Direction Int 类型, 里面包含 Up Down 两个方向
 	type tmpFile struct {
 		version  uint64
 		name     string
@@ -296,8 +308,8 @@ func LineColumnFromOffset(data []byte, offset int) (line, column int) {
 // LinesBeforeAndAfter reads n lines before and after a given line.
 // Set lineNumbers to true, to prepend line numbers.
 func LinesBeforeAndAfter(data []byte, line, before, after int, lineNumbers bool) []byte {
-	// TODO(mattes): Trim empty lines at the beginning and at the end
-	// TODO(mattes): Trim offset whitespace at the beginning of each line, so that indentation is preserved
+	// TODO(jadeydi): Trim empty lines at the beginning and at the end
+	// TODO(jadeydi): Trim offset whitespace at the beginning of each line, so that indentation is preserved
 	startLine := line - before
 	endLine := line + after
 	lines := bytes.SplitN(data, []byte("\n"), endLine+1)

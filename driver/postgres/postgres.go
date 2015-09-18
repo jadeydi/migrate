@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/jadeydi/migrate/file"
+	"github.com/jadeydi/migrate/migrate/direction"
 	"github.com/lib/pq"
-	"github.com/mattes/migrate/file"
-	"github.com/mattes/migrate/migrate/direction"
 	"strconv"
 )
 
@@ -41,7 +41,7 @@ func (driver *Driver) Close() error {
 }
 
 func (driver *Driver) ensureVersionTableExists() error {
-	if _, err := driver.db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + " (version int not null primary key);"); err != nil {
+	if _, err := driver.db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + " (version bigint not null primary key);"); err != nil {
 		return err
 	}
 	return nil
@@ -107,14 +107,15 @@ func (driver *Driver) Migrate(f file.File, pipe chan interface{}) {
 	}
 }
 
-func (driver *Driver) Version() (uint64, error) {
-	var version uint64
-	err := driver.db.QueryRow("SELECT version FROM " + tableName + " ORDER BY version DESC LIMIT 1").Scan(&version)
+// 需要返回一个 uint64 数组
+func (driver *Driver) Version() ([]uint64, error) {
+	var version []uint64
+	err := driver.db.QueryRow("SELECT version FROM " + tableName).Scan(&version)
 	switch {
 	case err == sql.ErrNoRows:
-		return 0, nil
+		return []uint64{}, nil
 	case err != nil:
-		return 0, err
+		return []uint64{}, err
 	default:
 		return version, nil
 	}

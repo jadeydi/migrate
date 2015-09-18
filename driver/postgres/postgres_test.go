@@ -2,9 +2,9 @@ package postgres
 
 import (
 	"database/sql"
-	"github.com/mattes/migrate/file"
-	"github.com/mattes/migrate/migrate/direction"
-	pipep "github.com/mattes/migrate/pipe"
+	"github.com/jadeydi/migrate/file"
+	"github.com/jadeydi/migrate/migrate/direction"
+	pipep "github.com/jadeydi/migrate/pipe"
 	"testing"
 )
 
@@ -32,20 +32,20 @@ func TestMigrate(t *testing.T) {
 	files := []file.File{
 		{
 			Path:      "/foobar",
-			FileName:  "001_foobar.up.sql",
-			Version:   1,
+			FileName:  "20150907140702_foobar.up.sql",
+			Version:   20150907140702,
 			Name:      "foobar",
 			Direction: direction.Up,
 			Content: []byte(`
 				CREATE TABLE yolo (
-					id serial not null primary key
+					id bigint not null primary key
 				);
 			`),
 		},
 		{
 			Path:      "/foobar",
-			FileName:  "002_foobar.down.sql",
-			Version:   1,
+			FileName:  "20150907140703_foobar.down.sql",
+			Version:   20150907140703,
 			Name:      "foobar",
 			Direction: direction.Down,
 			Content: []byte(`
@@ -54,8 +54,8 @@ func TestMigrate(t *testing.T) {
 		},
 		{
 			Path:      "/foobar",
-			FileName:  "002_foobar.up.sql",
-			Version:   2,
+			FileName:  "20150907140703_foobar.up.sql",
+			Version:   20150907140703,
 			Name:      "foobar",
 			Direction: direction.Up,
 			Content: []byte(`
