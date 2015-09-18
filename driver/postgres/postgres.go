@@ -109,14 +109,22 @@ func (driver *Driver) Migrate(f file.File, pipe chan interface{}) {
 
 // 需要返回一个 uint64 数组
 func (driver *Driver) Version() ([]uint64, error) {
-	var version []uint64
-	err := driver.db.QueryRow("SELECT version FROM " + tableName).Scan(&version)
+	var versions []uint64
+	rows, err := driver.db.Query("SELECT version FROM " + tableName)
+	defer rows.Close()
+	for rows.Next() {
+		var version uint64
+		err = rows.Scan(&version)
+		if err != nil {
+			break
+		}
+		versions = append(versions, version)
+	}
+
 	switch {
-	case err == sql.ErrNoRows:
-		return []uint64{}, nil
 	case err != nil:
 		return []uint64{}, err
 	default:
-		return version, nil
+		return versions, nil
 	}
 }
