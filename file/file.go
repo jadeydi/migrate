@@ -77,17 +77,12 @@ func (f *File) ReadContent() error {
 
 // ToFirstFrom fetches all (down) migration files including the migration file
 // of the current version to the very first migration file.
-func (mf *MigrationFiles) ToFirstFrom(version []uint64) (Files, error) {
+func (mf *MigrationFiles) ToFirstFrom(version map[uint64]bool) (Files, error) {
 	sort.Sort(sort.Reverse(mf))
 	files := make(Files, 0)
 	for _, migrationFile := range *mf {
-		var has bool = false
-		for _, v := range version {
-			if migrationFile.Version == v {
-				has = true
-			}
-		}
-		if has {
+		_, prs := version[migrationFile.Version]
+		if prs {
 			files = append(files, *migrationFile.DownFile)
 		}
 	}
@@ -96,17 +91,12 @@ func (mf *MigrationFiles) ToFirstFrom(version []uint64) (Files, error) {
 
 // ToLastFrom fetches all (up) migration files to the most recent migration file.
 // The migration file of the current version is not included.
-func (mf *MigrationFiles) ToLastFrom(version []uint64) (Files, error) {
+func (mf *MigrationFiles) ToLastFrom(version map[uint64]bool) (Files, error) {
 
 	files := make(Files, 0)
 	for _, migrationFile := range *mf {
-		var has bool = false
-		for _, v := range version {
-			if migrationFile.Version == v {
-				has = true
-			}
-		}
-		if !has {
+		_, prs := version[migrationFile.Version]
+		if !prs {
 			files = append(files, *migrationFile.UpFile)
 		}
 	}
@@ -121,7 +111,7 @@ func (mf *MigrationFiles) ToLastFrom(version []uint64) (Files, error) {
 // 		-1 will fetch the the previous down migration file
 // 		-2 will fetch the next two previous down migration files
 //		-n will fetch ...
-func (mf *MigrationFiles) From(version []uint64, relativeN int) (Files, error) {
+func (mf *MigrationFiles) From(version map[uint64]bool, relativeN int) (Files, error) {
 	var d direction.Direction
 	if relativeN > 0 {
 		d = direction.Up
@@ -146,16 +136,11 @@ func (mf *MigrationFiles) From(version []uint64, relativeN int) (Files, error) {
 
 	for _, migrationFile := range *mf {
 		if counter > 0 {
-			var has bool = false
-			for _, v := range version {
-				if migrationFile.Version == v {
-					has = true
-				}
-			}
-			if !has && d == direction.Up && migrationFile.UpFile != nil {
+			_, prs := version[migrationFile.Version]
+			if !prs && d == direction.Up && migrationFile.UpFile != nil {
 				files = append(files, *migrationFile.UpFile)
 				counter -= 1
-			} else if has && d == direction.Down && migrationFile.DownFile != nil {
+			} else if prs && d == direction.Down && migrationFile.DownFile != nil {
 				files = append(files, *migrationFile.DownFile)
 				counter -= 1
 			}

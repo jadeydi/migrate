@@ -202,10 +202,10 @@ func MigrateSync(url, migrationsPath string, relativeN int) (err []error, ok boo
 }
 
 // Version returns the current migration version
-func Version(url, migrationsPath string) (version []uint64, err error) {
+func Version(url, migrationsPath string) (version map[uint64]bool, err error) {
 	d, err := driver.New(url)
 	if err != nil {
-		return []uint64{}, err
+		return map[uint64]bool{}, err
 	}
 	return d.Version()
 }
@@ -252,10 +252,10 @@ func Create(url, migrationsPath, name string) (*file.MigrationFile, error) {
 
 // initDriverAndReadMigrationFilesAndGetVersion is a small helper
 // function that is common to most of the migration funcs
-func initDriverAndReadMigrationFilesAndGetVersion(url, migrationsPath string) (driver.Driver, *file.MigrationFiles, []uint64, error) {
+func initDriverAndReadMigrationFilesAndGetVersion(url, migrationsPath string) (driver.Driver, *file.MigrationFiles, map[uint64]bool, error) {
 	d, err := driver.New(url)
 	if err != nil {
-		return nil, nil, []uint64{}, err
+		return nil, nil, map[uint64]bool{}, err
 	}
 	// FilenameExtension 返回 "sh" string
 	// file.FilenameRegex(d.FilenameExtension()) 是 Regex 的指针
@@ -263,12 +263,12 @@ func initDriverAndReadMigrationFilesAndGetVersion(url, migrationsPath string) (d
 	files, err := file.ReadMigrationFiles(migrationsPath, file.FilenameRegex(d.FilenameExtension()))
 	if err != nil {
 		d.Close() // TODO what happens with errors from this func?
-		return nil, nil, []uint64{}, err
+		return nil, nil, map[uint64]bool{}, err
 	}
 	version, err := d.Version()
 	if err != nil {
 		d.Close() // TODO what happens with errors from this func?
-		return nil, nil, []uint64{}, err
+		return nil, nil, map[uint64]bool{}, err
 	}
 	return d, &files, version, nil
 }

@@ -183,7 +183,7 @@ func TestFiles(t *testing.T) {
 	**/
 
 	// test ToFirstFrom
-	tffFiles, err := files.ToFirstFrom([]uint64{101, 401})
+	tffFiles, err := files.ToFirstFrom(map[uint64]bool{101: true, 401: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -195,7 +195,7 @@ func TestFiles(t *testing.T) {
 	}
 
 	// test ToLastFrom
-	tofFiles, err := files.ToLastFrom([]uint64{101, 401})
+	tofFiles, err := files.ToLastFrom(map[uint64]bool{101: true, 401: true})
 	if err != nil {
 		t.Fatal(err)
 	}

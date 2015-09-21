@@ -93,7 +93,7 @@ func TestUp(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if version != 0 {
+		if len(version) != 0 {
 			t.Fatalf("Expected version 0, got %v", version)
 		}
 
@@ -105,7 +105,7 @@ func TestUp(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if version != 2 {
+		if len(version) != 2 {
 			t.Fatalf("Expected version 2, got %v", version)
 		}
 	}
