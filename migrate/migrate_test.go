@@ -3,11 +3,12 @@ package migrate
 import (
 	"io/ioutil"
 	"testing"
+	"time"
 )
 
 // Add Driver URLs here to test basic Up, Down, .. functions.
 var driverUrls = []string{
-	"postgres://localhost/migratetest?sslmode=disable",
+	"postgres://root@localhost:5432/migratetest?sslmode=disable",
 }
 
 func TestCreate(t *testing.T) {
@@ -35,7 +36,6 @@ func TestCreate(t *testing.T) {
 	}
 }
 
-/**
 func TestDown(t *testing.T) {
 	for _, driverUrl := range driverUrls {
 		t.Logf("Test driver: %s", driverUrl)
@@ -45,6 +45,7 @@ func TestDown(t *testing.T) {
 		}
 
 		Create(driverUrl, tmpdir, "migration1")
+		time.Sleep(time.Second * 2)
 		Create(driverUrl, tmpdir, "migration2")
 
 		errs, ok := ResetSync(driverUrl, tmpdir)
@@ -55,7 +56,7 @@ func TestDown(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if version != 2 {
+		if len(version) != 2 {
 			t.Fatalf("Expected version 2, got %v", version)
 		}
 
@@ -67,12 +68,11 @@ func TestDown(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if version != 0 {
+		if len(version) != 0 {
 			t.Fatalf("Expected version 0, got %v", version)
 		}
 	}
 }
-**/
 
 func TestUp(t *testing.T) {
 	for _, driverUrl := range driverUrls {
@@ -83,6 +83,7 @@ func TestUp(t *testing.T) {
 		}
 
 		Create(driverUrl, tmpdir, "migration1")
+		time.Sleep(time.Second * 2)
 		Create(driverUrl, tmpdir, "migration2")
 
 		errs, ok := DownSync(driverUrl, tmpdir)
@@ -108,6 +109,7 @@ func TestUp(t *testing.T) {
 		if len(version) != 2 {
 			t.Fatalf("Expected version 2, got %v", version)
 		}
+		DownSync(driverUrl, tmpdir)
 	}
 }
 
