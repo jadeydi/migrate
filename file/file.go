@@ -243,6 +243,22 @@ func ReadMigrationFiles(path string, filenameRegex *regexp.Regexp) (files Migrat
 	return newFiles, nil
 }
 
+func ReadFileByVersion(version uint64, path string, filenameRegex *regexp.Regexp) (*MigrationFile, error) {
+	files, err := ReadMigrationFiles(path, filenameRegex)
+	if err != nil {
+		return nil, err
+	}
+	var file *MigrationFile
+	for _, f := range files {
+		fmt.Println(f.Version)
+		if version == f.Version {
+			file = &f
+			break
+		}
+	}
+	return file, nil
+}
+
 // parseFilenameSchema parses the filename
 func parseFilenameSchema(filename string, filenameRegex *regexp.Regexp) (version uint64, name string, d direction.Direction, err error) {
 	matches := filenameRegex.FindStringSubmatch(filename)

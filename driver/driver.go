@@ -36,8 +36,11 @@ type Driver interface {
 	// the pipe channel to return any errors or other useful information.
 	Migrate(file file.File, pipe chan interface{})
 
+	// Retrun all Versions
+	Versions() (map[uint64]bool, error)
+
 	// Version returns the current migration version.
-	Version() (map[uint64]bool, error)
+	Version() (uint64, error)
 }
 
 // New returns Driver and calls Initialize on it

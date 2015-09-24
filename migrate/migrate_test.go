@@ -52,24 +52,24 @@ func TestDown(t *testing.T) {
 		if !ok {
 			t.Fatal(errs)
 		}
-		version, err := Version(driverUrl, tmpdir)
+		versions, err := Versions(driverUrl, tmpdir)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if len(version) != 2 {
-			t.Fatalf("Expected version 2, got %v", version)
+		if len(versions) != 2 {
+			t.Fatalf("Expected version 2, got %v", versions)
 		}
 
 		errs, ok = DownSync(driverUrl, tmpdir)
 		if !ok {
 			t.Fatal(errs)
 		}
-		version, err = Version(driverUrl, tmpdir)
+		versions, err = Versions(driverUrl, tmpdir)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if len(version) != 0 {
-			t.Fatalf("Expected version 0, got %v", version)
+		if len(versions) != 0 {
+			t.Fatalf("Expected version 0, got %v", versions)
 		}
 	}
 }
@@ -90,30 +90,29 @@ func TestUp(t *testing.T) {
 		if !ok {
 			t.Fatal(errs)
 		}
-		version, err := Version(driverUrl, tmpdir)
+		versions, err := Versions(driverUrl, tmpdir)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if len(version) != 0 {
-			t.Fatalf("Expected version 0, got %v", version)
+		if len(versions) != 0 {
+			t.Fatalf("Expected version 0, got %v", versions)
 		}
 
 		errs, ok = UpSync(driverUrl, tmpdir)
 		if !ok {
 			t.Fatal(errs)
 		}
-		version, err = Version(driverUrl, tmpdir)
+		versions, err = Versions(driverUrl, tmpdir)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if len(version) != 2 {
-			t.Fatalf("Expected version 2, got %v", version)
+		if len(versions) != 2 {
+			t.Fatalf("Expected version 2, got %v", versions)
 		}
 		DownSync(driverUrl, tmpdir)
 	}
 }
 
-/**
 func TestRedo(t *testing.T) {
 	for _, driverUrl := range driverUrls {
 		t.Logf("Test driver: %s", driverUrl)
@@ -123,34 +122,27 @@ func TestRedo(t *testing.T) {
 		}
 
 		Create(driverUrl, tmpdir, "migration1")
+		time.Sleep(time.Second * 2)
 		Create(driverUrl, tmpdir, "migration2")
 
-		errs, ok := ResetSync(driverUrl, tmpdir)
-		if !ok {
-			t.Fatal(errs)
-		}
-		version, err := Version(driverUrl, tmpdir)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if version != 2 {
-			t.Fatalf("Expected version 2, got %v", version)
-		}
+		UpSync(driverUrl, tmpdir)
 
-		errs, ok = RedoSync(driverUrl, tmpdir)
+		errs, ok := RedoSync(driverUrl, tmpdir)
 		if !ok {
 			t.Fatal(errs)
 		}
-		version, err = Version(driverUrl, tmpdir)
+		versions, err := Versions(driverUrl, tmpdir)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if version != 2 {
-			t.Fatalf("Expected version 2, got %v", version)
+		if len(versions) != 2 {
+			t.Fatalf("Expected version 2, got %v", versions)
 		}
+		DownSync(driverUrl, tmpdir)
 	}
 }
 
+/**
 func TestMigrate(t *testing.T) {
 	for _, driverUrl := range driverUrls {
 		t.Logf("Test driver: %s", driverUrl)

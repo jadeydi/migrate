@@ -117,13 +117,19 @@ func DownSync(url, migrationsPath string) (err []error, ok bool) {
 
 // Redo rolls back the most recently applied migration, then runs it again.
 func Redo(pipe chan interface{}, url, migrationsPath string) {
+	d, file, err := getRedoFile(url, migrationsPath)
+
+	if err != nil || file == nil {
+		go pipep.Close(pipe, nil)
+		return
+	}
 	pipe1 := pipep.New()
-	go Migrate(pipe1, url, migrationsPath, -1)
+	go d.Migrate(*file.DownFile, pipe1)
 	if ok := pipep.WaitAndRedirect(pipe1, pipe, handleInterrupts()); !ok {
 		go pipep.Close(pipe, nil)
 		return
 	} else {
-		go Migrate(pipe, url, migrationsPath, +1)
+		go d.Migrate(*file.UpFile, pipe)
 	}
 }
 
@@ -202,12 +208,20 @@ func MigrateSync(url, migrationsPath string, relativeN int) (err []error, ok boo
 }
 
 // Version returns the current migration version
-func Version(url, migrationsPath string) (version map[uint64]bool, err error) {
+func Version(url, migrationsPath string) (version uint64, err error) {
+	d, err := driver.New(url)
+	if err != nil {
+		return 0, err
+	}
+	return d.Version()
+}
+
+func Versions(url, migrationsPath string) (versions map[uint64]bool, err error) {
 	d, err := driver.New(url)
 	if err != nil {
 		return map[uint64]bool{}, err
 	}
-	return d.Version()
+	return d.Versions()
 }
 
 // Create creates new migration files on disk
@@ -265,12 +279,36 @@ func initDriverAndReadMigrationFilesAndGetVersion(url, migrationsPath string) (d
 		d.Close() // TODO what happens with errors from this func?
 		return nil, nil, map[uint64]bool{}, err
 	}
-	version, err := d.Version()
+	versions, err := d.Versions()
 	if err != nil {
 		d.Close() // TODO what happens with errors from this func?
 		return nil, nil, map[uint64]bool{}, err
 	}
-	return d, &files, version, nil
+	return d, &files, versions, nil
+}
+
+func getRedoFile(url, migrationsPath string) (driver.Driver, *file.MigrationFile, error) {
+	d, err := driver.New(url)
+	if err != nil {
+		d.Close()
+		return nil, nil, err
+	}
+	version, err := d.Version()
+	if err != nil {
+		d.Close()
+		return nil, nil, err
+	}
+	if version == 0 {
+		d.Close()
+		return nil, nil, nil
+	}
+	file, err := file.ReadFileByVersion(version, migrationsPath, file.FilenameRegex(d.FilenameExtension()))
+	if err != nil {
+		d.Close()
+		return nil, nil, err
+	}
+
+	return d, file, nil
 }
 
 // NewPipe is a convenience function for pipe.New().

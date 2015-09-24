@@ -107,8 +107,7 @@ func (driver *Driver) Migrate(f file.File, pipe chan interface{}) {
 	}
 }
 
-// 需要返回一个 uint64 数组
-func (driver *Driver) Version() (map[uint64]bool, error) {
+func (driver *Driver) Versions() (map[uint64]bool, error) {
 	var versions = make(map[uint64]bool)
 	rows, err := driver.db.Query("SELECT version FROM " + tableName)
 	defer rows.Close()
@@ -127,4 +126,13 @@ func (driver *Driver) Version() (map[uint64]bool, error) {
 	default:
 		return versions, nil
 	}
+}
+
+func (driver *Driver) Version() (uint64, error) {
+	var version uint64
+	err := driver.db.QueryRow("SELECT version FROM " + tableName + " ORDER BY version DESC LIMIT 1").Scan(&version)
+	if err != nil {
+		return 0, err
+	}
+	return version, nil
 }
